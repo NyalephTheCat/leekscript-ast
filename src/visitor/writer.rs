@@ -1,6 +1,6 @@
 use std::ops::AddAssign;
 
-use crate::visitor::{Visitable, VisitableMut, Visitor, VisitorMut};
+use crate::visitor::{Visitable, Visitor};
 
 #[derive(Debug, Default, Clone)]
 pub struct Writer(pub String);

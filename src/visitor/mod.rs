@@ -1,5 +1,7 @@
 use std::marker::PhantomData;
 
+pub mod writer;
+
 /// The Visitor trait with a generic visit method.
 pub trait Visitor {
     fn visit<T>(&mut self, t: &T)
