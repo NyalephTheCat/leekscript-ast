@@ -2,11 +2,7 @@ use std::marker::PhantomData;
 
 use nom::{combinator::opt, multi::many0, sequence::tuple, IResult, InputLength};
 
-pub mod flags;
-pub mod preceded;
-pub mod repeat;
-pub mod separated;
-pub mod terminated;
+
 
 pub trait Parser<I>: Sized {
     fn parse(input: I) -> IResult<I, Self>;

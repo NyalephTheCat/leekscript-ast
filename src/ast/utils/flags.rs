@@ -7,7 +7,7 @@ use nom::{
 
 use crate::visitor::{Visitable, VisitableMut, Visitor, VisitorMut};
 
-use super::Parser;
+use crate::parser::Parser;
 
 // Type-level list definitions
 #[derive(Debug)]

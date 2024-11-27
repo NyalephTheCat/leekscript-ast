@@ -5,7 +5,7 @@ use nom::{
 
 use crate::visitor::{Visitable, VisitableMut, Visitor, VisitorMut};
 
-use super::Parser;
+use crate::parser::Parser;
 
 pub type Separated0<T, S> = Separated<T, S, 0, { usize::MAX }>;
 pub type Separated1<T, S> = Separated<T, S, 1, { usize::MAX }>;

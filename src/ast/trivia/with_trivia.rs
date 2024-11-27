@@ -1,7 +1,8 @@
 use nom::{combinator::map, sequence::tuple};
 
 use crate::{
-    parser::{repeat::Repeat0, Parser},
+    ast::utils::repeat::Repeat0,
+    parser::Parser,
     visitor::{Visitable, VisitableMut, Visitor, VisitorMut},
 };
 

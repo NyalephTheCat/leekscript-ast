@@ -5,7 +5,7 @@ use nom::{
 
 use crate::visitor::{Visitable, VisitableMut, Visitor, VisitorMut};
 
-use super::Parser;
+use crate::parser::Parser;
 
 pub type Repeat0<T> = Repeat<T, 0, { usize::MAX }>;
 pub type Repeat1<T> = Repeat<T, 1, { usize::MAX }>;
