@@ -2,25 +2,27 @@ use nom::{combinator::map, sequence::tuple, IResult};
 
 use crate::visitor::{Visitable, VisitableMut, Visitor, VisitorMut};
 
-use super::Parser;
+use crate::parser::Parser;
 
-pub struct Preceded<Term, T>(pub Term, pub T);
-impl<I, Prec, T> Parser<I> for Preceded<Prec, T>
+pub struct Terminated<T, Term>(pub T, pub Term);
+impl<I, T, Term> Parser<I> for Terminated<T, Term>
 where
     I: Clone,
-    Prec: Parser<I>,
     T: Parser<I>,
+    Term: Parser<I>,
 {
     fn parse(input: I) -> IResult<I, Self> {
-        map(tuple((Prec::parse, T::parse)), |(prec, t)| Self(prec, t))(input)
+        map(tuple((T::parse, Term::parse)), |(item, term)| {
+            Self(item, term)
+        })(input)
     }
 }
 
-impl<V, Prec, T> Visitable<V> for Preceded<Prec, T>
+impl<V, T, Term> Visitable<V> for Terminated<T, Term>
 where
     V: Visitor,
-    Prec: Visitable<V>,
     T: Visitable<V>,
+    Term: Visitable<V>,
 {
     default fn accept(&self, visitor: &mut V) {
         visitor.visit(&self.0);
@@ -28,11 +30,11 @@ where
     }
 }
 
-impl<V, Prec, T> VisitableMut<V> for Preceded<Prec, T>
+impl<V, T, Term> VisitableMut<V> for Terminated<T, Term>
 where
     V: VisitorMut,
-    Prec: VisitableMut<V>,
     T: VisitableMut<V>,
+    Term: VisitableMut<V>,
 {
     default fn accept_mut(&mut self, visitor: &mut V) {
         visitor.visit_mut(&mut self.0);
