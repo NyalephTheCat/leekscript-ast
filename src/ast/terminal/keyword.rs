@@ -14,11 +14,15 @@ use crate::{
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Keywords {
     Global(KwGlobal),
+    Var(KwVar),
 }
 
 impl<'a> Parser<&'a str> for Keywords {
     fn parse(input: &'a str) -> nom::IResult<&'a str, Self> {
-        alt((map(KwGlobal::parse, Keywords::Global),))(input)
+        alt((
+            map(KwGlobal::parse, Keywords::Global),
+            map(KwVar::parse, Keywords::Var),
+        ))(input)
     }
 }
 
@@ -26,6 +30,7 @@ impl<V: Visitor> Visitable<V> for Keywords {
     default fn accept(&self, v: &mut V) {
         match self {
             Keywords::Global(node) => v.visit(node),
+            Keywords::Var(node) => v.visit(node),
         }
     }
 }
@@ -34,6 +39,7 @@ impl<V: VisitorMut> VisitableMut<V> for Keywords {
     default fn accept_mut(&mut self, v: &mut V) {
         match self {
             Keywords::Global(node) => node.accept_mut(v),
+            Keywords::Var(node) => node.accept_mut(v),
         }
     }
 }

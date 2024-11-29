@@ -1,5 +1,5 @@
 use leek_ast::{
-    ast::{structure::File, terminal::identifier::Identifier, trivia::with_trivia::WithTrivia},
+    ast::structure::File,
     parser::Parser,
     visitor::{writer::Writer, Visitor},
 };
@@ -7,7 +7,7 @@ use leek_ast::{
 fn main() {
     let test_str = r#"
 // Set une globale test
-global a;
+var c1 = a, d1;
 "#;
     let out: File = <_ as Parser<&str>>::parse(test_str).unwrap().1;
 

@@ -4,6 +4,7 @@ use nom::{
     sequence::{pair, tuple},
     IResult,
 };
+use type_struct::TypeFollowedById;
 
 use crate::{
     parser::Parser,
@@ -13,15 +14,17 @@ use crate::{
 use super::{
     terminal::{
         identifier::Identifier,
-        keyword::KwGlobal,
+        keyword::{KwGlobal, KwVar},
         symbol::{Comma, Equal, Semi},
     },
     trivia::with_trivia::WithTrivia,
     utils::{
-        flags::{Cons, Flag, HasFlag, Nil, WithFlag},
+        flags::{Flag, HasFlag, WithFlag},
         separated::Separated1,
     },
 };
+
+pub mod type_struct;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct File {
@@ -84,14 +87,18 @@ impl<V: VisitorMut> VisitableMut<V> for EndOfFile {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Statements<F: WithFlag<GlobalFlag>> {
     GlobalDeclaration(HasFlag<GlobalFlag, F>, GlobalDeclaration),
+    VariableDeclaration(VariableDeclaration),
 }
 
 impl<'a, F: WithFlag<GlobalFlag>> Parser<&'a str> for Statements<F> {
     fn parse(input: &'a str) -> IResult<&'a str, Self> {
-        alt((map(
-            pair(<_ as Parser<&'a str>>::parse, <_ as Parser<&'a str>>::parse),
-            |(first, last)| Self::GlobalDeclaration(first, last),
-        ),))(input)
+        alt((
+            map(
+                pair(<_ as Parser<&'a str>>::parse, <_ as Parser<&'a str>>::parse),
+                |(first, last)| Self::GlobalDeclaration(first, last),
+            ),
+            map(<_ as Parser<&'a str>>::parse, Self::VariableDeclaration),
+        ))(input)
     }
 }
 impl<V: Visitor, F: WithFlag<GlobalFlag>> Visitable<V> for Statements<F> {
@@ -101,6 +108,7 @@ impl<V: Visitor, F: WithFlag<GlobalFlag>> Visitable<V> for Statements<F> {
                 flag.accept(v);
                 node.accept(v);
             }
+            Self::VariableDeclaration(node) => node.accept(v),
         }
     }
 }
@@ -111,6 +119,7 @@ impl<V: VisitorMut, F: WithFlag<GlobalFlag>> VisitableMut<V> for Statements<F> {
                 flag.accept_mut(v);
                 node.accept_mut(v);
             }
+            Self::VariableDeclaration(node) => node.accept_mut(v),
         }
     }
 }
@@ -118,7 +127,7 @@ impl<V: VisitorMut, F: WithFlag<GlobalFlag>> VisitableMut<V> for Statements<F> {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GlobalDeclaration(
     pub WithTrivia<KwGlobal>,
-    pub Option<WithTrivia<Type>>,
+    pub Option<WithTrivia<TypeFollowedById>>,
     pub AssignmentList,
     pub Option<WithTrivia<Semi>>,
 );
@@ -138,8 +147,8 @@ impl<'a> Parser<&'a str> for GlobalDeclaration {
 impl<V: Visitor> Visitable<V> for GlobalDeclaration {
     default fn accept(&self, v: &mut V) {
         v.visit(&self.0);
-        self.1.accept(v);
-        self.2.accept(v);
+        v.visit(&self.1);
+        v.visit(&self.2);
         v.visit(&self.3);
     }
 }
@@ -153,17 +162,66 @@ impl<V: VisitorMut> VisitableMut<V> for GlobalDeclaration {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Type;
-impl<'a> Parser<&'a str> for Type {
+pub enum VariableDeclaration {
+    WithType(TypeFollowedById, AssignmentList, Option<WithTrivia<Semi>>),
+    UnspecifiedType(KwVar, AssignmentList, Option<WithTrivia<Semi>>),
+}
+
+impl<'a> Parser<&'a str> for VariableDeclaration {
     fn parse(input: &'a str) -> IResult<&'a str, Self> {
-        map(<() as Parser<&'a str>>::parse, |_| Self)(input)
+        alt((
+            map(
+                tuple((
+                    <_ as Parser<&'a str>>::parse,
+                    <_ as Parser<&'a str>>::parse,
+                    <_ as Parser<&'a str>>::parse,
+                )),
+                |(ty, assignments, semi)| Self::WithType(ty, assignments, semi),
+            ),
+            map(
+                tuple((
+                    <_ as Parser<&'a str>>::parse,
+                    <_ as Parser<&'a str>>::parse,
+                    <_ as Parser<&'a str>>::parse,
+                )),
+                |(var, assignments, semi)| Self::UnspecifiedType(var, assignments, semi),
+            ),
+        ))(input)
     }
 }
-impl<V: Visitor> Visitable<V> for Type {
-    default fn accept(&self, _: &mut V) {}
+
+impl<V: Visitor> Visitable<V> for VariableDeclaration {
+    default fn accept(&self, v: &mut V) {
+        match self {
+            Self::WithType(ty, assignments, semi) => {
+                v.visit(ty);
+                v.visit(assignments);
+                v.visit(semi);
+            }
+            Self::UnspecifiedType(var, assignments, semi) => {
+                v.visit(var);
+                v.visit(assignments);
+                v.visit(semi);
+            }
+        }
+    }
 }
-impl<V: VisitorMut> VisitableMut<V> for Type {
-    default fn accept_mut(&mut self, _: &mut V) {}
+
+impl<V: VisitorMut> VisitableMut<V> for VariableDeclaration {
+    default fn accept_mut(&mut self, v: &mut V) {
+        match self {
+            Self::WithType(ty, assignments, semi) => {
+                ty.accept_mut(v);
+                assignments.accept_mut(v);
+                semi.accept_mut(v);
+            }
+            Self::UnspecifiedType(var, assignments, semi) => {
+                var.accept_mut(v);
+                assignments.accept_mut(v);
+                semi.accept_mut(v);
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -185,7 +243,10 @@ impl<V: VisitorMut> VisitableMut<V> for AssignmentList {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Assignment(Identifier, Option<(Equal, Expression)>);
+pub struct Assignment(
+    Identifier,
+    Option<(WithTrivia<Equal>, WithTrivia<Expression>)>,
+);
 impl<'a> Parser<&'a str> for Assignment {
     fn parse(input: &'a str) -> IResult<&'a str, Self> {
         map(
