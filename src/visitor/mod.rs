@@ -32,7 +32,30 @@ pub trait VisitableMut<V: VisitorMut + ?Sized> {
     fn accept_mut(&mut self, visitor: &mut V);
 }
 
-// Default implementation for Vec<T>
+impl<V, T> Visitable<V> for Option<T>
+where
+    V: Visitor,
+    T: Visitable<V>,
+{
+    default fn accept(&self, visitor: &mut V) {
+        if let Some(value) = self {
+            visitor.visit(value);
+        }
+    }
+}
+
+impl<V, T> VisitableMut<V> for Option<T>
+where
+    V: VisitorMut,
+    T: VisitableMut<V>,
+{
+    default fn accept_mut(&mut self, visitor: &mut V) {
+        if let Some(value) = self {
+            visitor.visit_mut(value);
+        }
+    }
+}
+
 impl<V, T> Visitable<V> for Vec<T>
 where
     V: Visitor,

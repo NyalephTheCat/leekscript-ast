@@ -2,8 +2,6 @@ use std::marker::PhantomData;
 
 use nom::{combinator::opt, multi::many0, sequence::tuple, IResult, InputLength};
 
-
-
 pub trait Parser<I>: Sized {
     fn parse(input: I) -> IResult<I, Self>;
 }
