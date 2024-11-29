@@ -9,6 +9,7 @@ use crate::parser::Parser;
 
 pub type Separated0<T, S> = Separated<T, S, 0, { usize::MAX }>;
 pub type Separated1<T, S> = Separated<T, S, 1, { usize::MAX }>;
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Separated<T, S, const MIN: usize, const MAX: usize>(pub Vec<T>, pub Vec<S>);
 impl<I, T, S, const MIN: usize, const MAX: usize> Parser<I> for Separated<T, S, MIN, MAX>
 where

@@ -1,14 +1,15 @@
 use leek_ast::{
-    ast::{terminal::identifier::Identifier, trivia::with_trivia::WithTrivia},
+    ast::structure::file::File,
     parser::Parser,
     visitor::{writer::Writer, Visitor},
 };
 
 fn main() {
-    let test_str = "   /* some test */   abc def /* gh */ xyx";
-    let out = <Vec<WithTrivia<Identifier>> as Parser<&str>>::parse(test_str)
-        .unwrap()
-        .1;
+    let test_str = r#"
+// Set une globale test
+var c1 = a, d1;
+"#;
+    let out: File = <_ as Parser<&str>>::parse(test_str).unwrap().1;
 
     println!("{:#?}", out);
 

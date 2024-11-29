@@ -10,11 +10,11 @@ use crate::visitor::{Visitable, VisitableMut, Visitor, VisitorMut};
 use crate::parser::Parser;
 
 // Type-level list definitions
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Nil;
 
-#[derive(Debug)]
-pub struct Cons<Head, Tail>(PhantomData<Head>, PhantomData<Tail>);
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Cons<Head: Flag, Tail>(PhantomData<Head>, PhantomData<Tail>);
 
 pub trait Flag {
     const FLAG: bool;
@@ -28,7 +28,7 @@ pub trait WithFlag<T>
 where
     T: Flag,
 {
-    const HAS: bool;
+    const HAS: bool = false;
 }
 
 // Base case: Nil has no flags
@@ -39,8 +39,8 @@ impl<T: Flag> WithFlag<T> for Nil {
 // If the head is not the flag, delegate to the tail
 impl<Head, Tail, T: Flag> WithFlag<T> for Cons<Head, Tail>
 where
-    Tail: WithFlag<T>,         // Delegate to
-    Head: IsSame<T> + Default, // Ensure U is not T
+    Tail: WithFlag<T>,      // Delegate to
+    Head: IsSame<T> + Flag, // Ensure U is not T
 {
     const HAS: bool = Head::SAME || Tail::HAS;
 }
@@ -53,7 +53,7 @@ impl<T> IsSame<T> for T {
     const SAME: bool = true;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HasFlag<T, S>(PhantomData<(T, S)>)
 where
     S: WithFlag<T>,
@@ -75,7 +75,7 @@ where
     T: Flag,
 {
     fn parse(input: I) -> IResult<I, Self> {
-        // If the flag is present, return a successfull parse,
+        // If the flag is present, return a successful parse,
         // Othersise, return an error
         if <S as WithFlag<T>>::HAS && T::FLAG {
             Ok((input, Self::default()))
@@ -85,7 +85,7 @@ where
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HasNotFlag<T, S>(PhantomData<(T, S)>)
 where
     S: WithFlag<T>,
@@ -107,7 +107,7 @@ where
     T: Flag,
 {
     fn parse(input: I) -> IResult<I, Self> {
-        // If the flag is present, return a successfull parse,
+        // If the flag is present, return a successful parse,
         // Othersise, return an error
         if !<S as WithFlag<T>>::HAS || !T::FLAG {
             Ok((input, Self::default()))

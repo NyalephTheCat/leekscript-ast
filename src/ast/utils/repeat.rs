@@ -9,6 +9,8 @@ use crate::parser::Parser;
 
 pub type Repeat0<T> = Repeat<T, 0, { usize::MAX }>;
 pub type Repeat1<T> = Repeat<T, 1, { usize::MAX }>;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Repeat<T, const MIN: usize, const MAX: usize>(pub Vec<T>);
 impl<T, const MIN: usize, const MAX: usize> From<Repeat<T, MIN, MAX>> for Vec<T> {
     fn from(val: Repeat<T, MIN, MAX>) -> Self {

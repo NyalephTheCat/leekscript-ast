@@ -4,6 +4,7 @@ use crate::visitor::{Visitable, VisitableMut, Visitor, VisitorMut};
 
 use crate::parser::Parser;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Terminated<T, Term>(pub T, pub Term);
 impl<I, T, Term> Parser<I> for Terminated<T, Term>
 where

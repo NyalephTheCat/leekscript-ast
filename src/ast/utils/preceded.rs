@@ -4,6 +4,7 @@ use crate::visitor::{Visitable, VisitableMut, Visitor, VisitorMut};
 
 use crate::parser::Parser;
 
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Preceded<Term, T>(pub Term, pub T);
 impl<I, Prec, T> Parser<I> for Preceded<Prec, T>
 where
