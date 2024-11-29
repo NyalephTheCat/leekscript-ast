@@ -1,5 +1,5 @@
 use leek_ast::{
-    ast::structure::File,
+    ast::structure::file::File,
     parser::Parser,
     visitor::{writer::Writer, Visitor},
 };
