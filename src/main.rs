@@ -1,17 +1,28 @@
+use std::{path::PathBuf, str::FromStr};
+
 use leek_ast::{
     ast::structure::file::File,
     parser::Parser,
-    visitor::{writer::Writer, Visitor},
+    visitor::{includer::Includer, writer::Writer, Visitor, VisitorMut},
 };
 
 fn main() {
     let test_str = r#"
-// Set une globale test
-var c1 = a, d1;
+include('test.leek');
+include('test.leek');
+
+if (a) b
+
 "#;
-    let out: File = <_ as Parser<&str>>::parse(test_str).unwrap().1;
+    let mut out: File = <_ as Parser<&str>>::parse(test_str).unwrap().1;
 
     println!("{:#?}", out);
+
+    let mut includer = Includer {
+        root_file: PathBuf::from_str("tests/").unwrap(),
+        files_included: Default::default(),
+    };
+    includer.visit_mut(&mut out);
 
     let mut writer = Writer(String::new());
     writer.visit(&out);

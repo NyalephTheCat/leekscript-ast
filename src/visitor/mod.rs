@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+pub mod includer;
 pub mod writer;
 
 /// The Visitor trait with a generic visit method.
@@ -13,7 +14,7 @@ pub trait Visitor {
 }
 
 /// The VisitorMut trait with a generic visit method for mutable references.
-pub trait VisitorMut: Clone + Copy {
+pub trait VisitorMut: Clone {
     fn visit_mut<T>(&mut self, t: &mut T)
     where
         T: VisitableMut<Self> + ?Sized,
@@ -177,4 +178,24 @@ where
     V: VisitorMut,
 {
     default fn accept_mut(&mut self, _visitor: &mut V) {}
+}
+
+impl<V, T> Visitable<V> for Box<T>
+where
+    V: Visitor,
+    T: Visitable<V>,
+{
+    default fn accept(&self, visitor: &mut V) {
+        visitor.visit(&**self);
+    }
+}
+
+impl<V, T> VisitableMut<V> for Box<T>
+where
+    V: VisitorMut,
+    T: VisitableMut<V>,
+{
+    default fn accept_mut(&mut self, visitor: &mut V) {
+        visitor.visit_mut(&mut **self);
+    }
 }

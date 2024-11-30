@@ -33,7 +33,7 @@ impl<V: Visitor> Visitable<V> for File {
 
 impl<V: VisitorMut> VisitableMut<V> for File {
     default fn accept_mut(&mut self, visitor: &mut V) {
-        self.statements.accept_mut(visitor);
-        self.eof.accept_mut(visitor);
+        visitor.visit_mut(&mut self.statements);
+        visitor.visit_mut(&mut self.eof);
     }
 }
