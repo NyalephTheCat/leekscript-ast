@@ -11,7 +11,7 @@ fn main() {
 include('test.leek');
 include('test.leek');
 
-if (a) b
+if (1) b
 
 "#;
     let mut out: File = <_ as Parser<&str>>::parse(test_str).unwrap().1;

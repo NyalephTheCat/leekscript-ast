@@ -199,3 +199,39 @@ where
         visitor.visit_mut(&mut **self);
     }
 }
+
+impl<V> Visitable<V> for String
+where
+    V: Visitor,
+{
+    default fn accept(&self, visitor: &mut V) {
+        visitor.visit(self);
+    }
+}
+
+impl<V> VisitableMut<V> for String
+where
+    V: VisitorMut,
+{
+    default fn accept_mut(&mut self, visitor: &mut V) {
+        visitor.visit_mut(self);
+    }
+}
+
+impl<V> Visitable<V> for &str
+where
+    V: Visitor,
+{
+    default fn accept(&self, visitor: &mut V) {
+        visitor.visit(self);
+    }
+}
+
+impl<V> VisitableMut<V> for &str
+where
+    V: VisitorMut,
+{
+    default fn accept_mut(&mut self, visitor: &mut V) {
+        visitor.visit_mut(self);
+    }
+}
